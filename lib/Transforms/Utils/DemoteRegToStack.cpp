@@ -27,6 +27,10 @@ AllocaInst *llvm::DemoteRegToStack(Instruction &I, bool VolatileLoads,
     return nullptr;
   }
 
+  if (!I.getType()->isSized()) {
+    return nullptr;
+  }
+
   Function *F = I.getParent()->getParent();
   const DataLayout &DL = F->getParent()->getDataLayout();
 

@@ -121,6 +121,7 @@ MODULE_PASS("sancov-module", ModuleSanitizerCoveragePass())
 MODULE_PASS("memprof-module", ModuleMemProfilerPass())
 MODULE_PASS("poison-checking", PoisonCheckingPass())
 MODULE_PASS("pseudo-probe-update", PseudoProbeUpdatePass())
+MODULE_PASS("moveconstants", MoveConstantsPass())
 #undef MODULE_PASS
 
 #ifndef CGSCC_ANALYSIS
@@ -328,6 +329,9 @@ FUNCTION_PASS("msan", MemorySanitizerPass({}))
 FUNCTION_PASS("kmsan", MemorySanitizerPass({0, false, /*Kernel=*/true}))
 FUNCTION_PASS("tsan", ThreadSanitizerPass())
 FUNCTION_PASS("memprof", MemProfilerPass())
+FUNCTION_PASS("instsweller", InstSwellerPass());
+FUNCTION_PASS("bbsplitter", SplitterPass());
+FUNCTION_PASS("indirector", IndirectorPass());
 #undef FUNCTION_PASS
 
 #ifndef FUNCTION_PASS_WITH_PARAMS

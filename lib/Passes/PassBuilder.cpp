@@ -238,6 +238,10 @@
 #include "llvm/Transforms/Vectorize/LoopVectorize.h"
 #include "llvm/Transforms/Vectorize/SLPVectorizer.h"
 #include "llvm/Transforms/Vectorize/VectorCombine.h"
+#include "llvm/Transforms/Obfuscate/InstSweller.h"
+#include "llvm/Transforms/Obfuscate/Splitter.h"
+#include "llvm/Transforms/Obfuscate/Indirector.h"
+#include "llvm/Transforms/Obfuscate/MoveConstants.h"
 
 using namespace llvm;
 
@@ -1453,6 +1457,11 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
 
   OptimizePM.addPass(CoroCleanupPass());
 
+  OptimizePM.addPass(RegToMemPass());
+  OptimizePM.addPass(InstSwellerPass());
+  OptimizePM.addPass(SplitterPass());
+  OptimizePM.addPass(IndirectorPass());
+
   // Add the core optimizing pipeline.
   MPM.addPass(createModuleToFunctionPassAdaptor(std::move(OptimizePM)));
 
@@ -1468,6 +1477,7 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   // ordering here.
   MPM.addPass(GlobalDCEPass());
   MPM.addPass(ConstantMergePass());
+  MPM.addPass(MoveConstantsPass());
 
   // TODO: Relative look table converter pass caused an issue when full lto is
   // enabled. See https://reviews.llvm.org/D94355 for more details.

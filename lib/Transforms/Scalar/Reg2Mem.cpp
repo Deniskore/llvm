@@ -33,13 +33,21 @@
 #include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Transforms/Obfuscate/ObfUtils.h"
 #include <list>
+#include <string>
+
 using namespace llvm;
+using namespace std;
 
 #define DEBUG_TYPE "reg2mem"
 
 STATISTIC(NumRegsDemoted, "Number of registers demoted");
 STATISTIC(NumPhisDemoted, "Number of phi-nodes demoted");
+
+cl::list<std::string> llvm::FunctionsList(
+    cl::NormalFormatting, cl::ZeroOrMore, "obfuscate", cl::NotHidden,
+    cl::desc("List of functions to obfuscate"), cl::CommaSeparated);
 
 static bool valueEscapes(const Instruction &Inst) {
   const BasicBlock *BB = Inst.getParent();
@@ -61,7 +69,8 @@ static bool runPass(Function &F) {
   // safe if block is well-formed: it always have terminator, otherwise
   // we'll get and assertion.
   BasicBlock::iterator I = BBEntry->begin();
-  while (isa<AllocaInst>(I)) ++I;
+  while (isa<AllocaInst>(I))
+    ++I;
 
   CastInst *AllocaInsertionPoint = new BitCastInst(
       Constant::getNullValue(Type::getInt32Ty(F.getContext())),
@@ -69,7 +78,7 @@ static bool runPass(Function &F) {
 
   // Find the escaped instructions. But don't create stack slots for
   // allocas in entry block.
-  std::list<Instruction*> WorkList;
+  std::list<Instruction *> WorkList;
   for (Instruction &I : instructions(F))
     if (!(isa<AllocaInst>(I) && I.getParent() == BBEntry) && valueEscapes(I))
       WorkList.push_front(&I);
@@ -95,6 +104,10 @@ static bool runPass(Function &F) {
 }
 
 PreservedAnalyses RegToMemPass::run(Function &F, FunctionAnalysisManager &AM) {
+  if (!IsFunctionInList(FunctionsList, F.getName())) {
+    return PreservedAnalyses::all();
+  }
+
   auto *DT = &AM.getResult<DominatorTreeAnalysis>(F);
   auto *LI = &AM.getResult<LoopAnalysis>(F);
   unsigned N = SplitAllCriticalEdges(F, CriticalEdgeSplittingOptions(DT, LI));

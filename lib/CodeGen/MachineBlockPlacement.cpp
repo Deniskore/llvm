@@ -61,6 +61,8 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/Scalar/Reg2Mem.h"
+#include "llvm/Transforms/Obfuscate/ObfUtils.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -81,6 +83,7 @@ STATISTIC(CondBranchTakenFreq,
           "Potential frequency of taking conditional branches");
 STATISTIC(UncondBranchTakenFreq,
           "Potential frequency of taking unconditional branches");
+
 
 static cl::opt<unsigned> AlignAllBlock(
     "align-all-blocks",
@@ -3293,6 +3296,11 @@ void MachineBlockPlacement::initDupThreshold() {
 }
 
 bool MachineBlockPlacement::runOnMachineFunction(MachineFunction &MF) {
+
+  if (IsFunctionInList(FunctionsList, MF.getName())) {
+    return false;
+  }
+
   if (skipFunction(MF.getFunction()))
     return false;
 

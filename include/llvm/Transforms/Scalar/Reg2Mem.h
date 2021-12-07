@@ -14,9 +14,13 @@
 #define LLVM_TRANSFORMS_SCALAR_REG2MEM_H
 
 #include "llvm/IR/PassManager.h"
+#include "llvm/Support/CommandLine.h"
+
+using namespace std;
 
 namespace llvm {
 
+extern cl::list<std::string> FunctionsList;
 class RegToMemPass : public PassInfoMixin<RegToMemPass> {
 public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
